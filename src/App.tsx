@@ -459,6 +459,37 @@ export default function App() {
             Goal two is finishing first on the leaderboard.
           </p>
         </article>
+
+        <article className="panel routine-panel">
+          <div className="panel-header compact-header">
+            <div>
+              <div className="eyebrow">Suggested Routine</div>
+              <h2>15 to 20 minutes</h2>
+            </div>
+          </div>
+          <div className="routine-list">
+            <div className="routine-item">
+              <strong>Warm-up</strong>
+              <span>3 min</span>
+              <p>Right hand high and low, left hand high and low, then quick alternating pounds.</p>
+            </div>
+            <div className="routine-item">
+              <strong>Combos</strong>
+              <span>5 min</span>
+              <p>Crossovers, between the legs, and behind the back. Keep eyes up.</p>
+            </div>
+            <div className="routine-item">
+              <strong>Two-ball</strong>
+              <span>5 min</span>
+              <p>Pound both together, then alternate to build confidence with both hands.</p>
+            </div>
+            <div className="routine-item">
+              <strong>Game-speed moves</strong>
+              <span>5 to 7 min</span>
+              <p>Attack a cone or chair, make a move, and explode past it at full speed.</p>
+            </div>
+          </div>
+        </article>
       </section>
 
       {isLoading ? <div className="toast">Loading...</div> : null}
