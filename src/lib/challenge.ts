@@ -135,3 +135,28 @@ export function getChallengeProgress(totalSessions: number, referenceDate = new 
     state: "catch-up",
   };
 }
+
+export function getCurrentStreak(
+  sessions: Session[],
+  referenceDate = new Date(),
+): number {
+  const practicedDays = new Set(sessions.map((session) => session.practiced_on));
+  const cursor = fromDateKey(toDateKey(referenceDate));
+
+  if (!practicedDays.has(toDateKey(cursor))) {
+    cursor.setDate(cursor.getDate() - 1);
+
+    if (!practicedDays.has(toDateKey(cursor))) {
+      return 0;
+    }
+  }
+
+  let streak = 0;
+
+  while (practicedDays.has(toDateKey(cursor))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return streak;
+}

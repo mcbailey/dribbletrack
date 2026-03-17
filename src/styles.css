@@ -468,6 +468,110 @@ button {
   margin-top: 14px;
 }
 
+.compact-hero {
+  display: block;
+  padding: 24px 26px;
+}
+
+.compact-hero .hero-copy h1 {
+  max-width: 12ch;
+  margin-bottom: 10px;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+}
+
+.simple-grid {
+  align-items: start;
+}
+
+.chooser-panel,
+.note-panel {
+  grid-column: span 12;
+}
+
+.focus-panel {
+  grid-column: span 7;
+}
+
+.leaderboard-panel {
+  grid-column: span 5;
+}
+
+.compact-header {
+  margin-bottom: 16px;
+}
+
+.compact-header h2 {
+  margin-top: 8px;
+}
+
+.chooser-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 16px;
+  align-items: start;
+}
+
+.compact-player-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.compact-player-card {
+  min-height: 88px;
+  align-content: center;
+}
+
+.compact-form {
+  margin-bottom: 0;
+  align-items: stretch;
+}
+
+.compact-form input,
+.compact-form button {
+  height: 56px;
+}
+
+.focus-panel .session-button {
+  margin-top: 4px;
+}
+
+.mini-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.mini-stat-card {
+  min-height: 126px;
+  align-content: start;
+}
+
+.mini-stat-card strong {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.compact-leaderboard-list {
+  gap: 10px;
+}
+
+.compact-leaderboard-row {
+  grid-template-columns: 48px 1fr auto;
+  gap: 12px;
+  padding: 14px;
+}
+
+.compact-empty-state {
+  min-height: 88px;
+}
+
+.basic-note {
+  max-width: 62ch;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
 .empty-state {
   display: grid;
   place-items: center;
@@ -542,6 +646,11 @@ button {
   .selected-summary {
     grid-template-columns: 1fr;
   }
+
+  .chooser-layout,
+  .mini-stats {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
@@ -570,5 +679,9 @@ button {
   .leaderboard-rank {
     width: 38px;
     height: 38px;
+  }
+
+  .compact-hero .hero-copy h1 {
+    max-width: none;
   }
 }
