@@ -1,7 +1,7 @@
 import type { Session } from "../types";
 
 export const CHALLENGE_START = "2026-03-23";
-export const CHALLENGE_END = "2026-04-19";
+export const CHALLENGE_END = "2026-04-30";
 export const CHALLENGE_TARGET = 16;
 export const WEEKLY_TARGET = 4;
 
