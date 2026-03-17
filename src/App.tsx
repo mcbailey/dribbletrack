@@ -57,6 +57,7 @@ export default function App() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
+  const [selectedDateKey, setSelectedDateKey] = useState("");
   const [passcodeInput, setPasscodeInput] = useState("");
   const [unlocked, setUnlocked] = useState(
     window.localStorage.getItem(PASSCODE_STORAGE_KEY) === "yes",
@@ -91,6 +92,10 @@ export default function App() {
 
     void loadData();
   }, []);
+
+  useEffect(() => {
+    setSelectedDateKey(todayKey);
+  }, [todayKey]);
 
   useEffect(() => {
     if (!players.length) {
@@ -160,6 +165,38 @@ export default function App() {
   const selectedStats =
     playerStats.find((entry) => entry.player.id === selectedPlayerId) ?? null;
 
+  useEffect(() => {
+    if (!selectedStats) {
+      return;
+    }
+
+    if (!selectedDateKey) {
+      setSelectedDateKey(todayKey);
+      return;
+    }
+
+    if (selectedDateKey > todayKey) {
+      setSelectedDateKey(todayKey);
+      return;
+    }
+
+    if (selectedDateKey < selectedStats.signupDateKey) {
+      setSelectedDateKey(selectedStats.signupDateKey);
+    }
+  }, [selectedDateKey, selectedStats, todayKey]);
+
+  const selectedDateCompleted = useMemo(() => {
+    if (!selectedPlayer) {
+      return false;
+    }
+
+    return sessions.some(
+      (session) =>
+        session.player_id === selectedPlayer.id &&
+        session.practiced_on === selectedDateKey,
+    );
+  }, [selectedDateKey, selectedPlayer, sessions]);
+
   async function refreshData() {
     const [playerList, sessionList] = await Promise.all([
       listPlayers(),
@@ -219,7 +256,7 @@ export default function App() {
   }
 
   async function handleSessionToggle() {
-    if (!selectedPlayer || !selectedStats) {
+    if (!selectedPlayer || !selectedStats || !selectedDateKey) {
       return;
     }
 
@@ -228,8 +265,8 @@ export default function App() {
       setErrorMessage("");
       await setSessionComplete(
         selectedPlayer.id,
-        todayKey,
-        !selectedStats.completedToday,
+        selectedDateKey,
+        !selectedDateCompleted,
       );
       await refreshData();
     } catch (error) {
@@ -350,23 +387,45 @@ export default function App() {
         <article className="panel focus-panel">
           <div className="panel-header compact-header">
             <div>
-              <div className="eyebrow">Today</div>
+              <div className="eyebrow">Check-In</div>
               <h2>{selectedPlayer ? selectedPlayer.name : "Choose a person"}</h2>
             </div>
-            <span className="panel-chip">{formatDateLabel(todayKey)}</span>
+            <span className="panel-chip">
+              {selectedDateKey ? formatDateLabel(selectedDateKey) : formatDateLabel(todayKey)}
+            </span>
           </div>
 
           {selectedStats ? (
             <>
+              <div className="date-editor">
+                <label className="field-label" htmlFor="practice-date">
+                  Practice date
+                </label>
+                <input
+                  id="practice-date"
+                  type="date"
+                  value={selectedDateKey}
+                  min={selectedStats.signupDateKey}
+                  max={todayKey}
+                  onChange={(event) => setSelectedDateKey(event.target.value)}
+                />
+              </div>
+
               <button
                 type="button"
                 className={`session-button ${
-                  selectedStats.completedToday ? "completed" : ""
+                  selectedDateCompleted ? "completed" : ""
                 }`}
                 onClick={() => void handleSessionToggle()}
                 disabled={isSaving}
               >
-                {selectedStats.completedToday ? "Undo today" : "Mark today complete"}
+                {selectedDateCompleted
+                  ? selectedDateKey === todayKey
+                    ? "Undo today"
+                    : "Undo selected date"
+                  : selectedDateKey === todayKey
+                    ? "Mark today complete"
+                    : "Mark selected date complete"}
               </button>
 
               <div className="mini-stats">
@@ -452,6 +511,9 @@ export default function App() {
             Each person starts when they join. Their goal is 4 sessions per week,
             with the first week prorated if there are fewer than 4 days left.
             Everyone still finishes on {formatDateLabel(CHALLENGE_END)}.
+          </p>
+          <p className="panel-note basic-note">
+            Need to fix a missed check-in? Pick an earlier date in the check-in card.
           </p>
         </article>
 

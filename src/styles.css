@@ -542,6 +542,27 @@ button {
   margin-top: 4px;
 }
 
+.date-editor {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.date-editor input {
+  width: 100%;
+  max-width: 220px;
+  border: 1px solid rgba(84, 52, 20, 0.15);
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--ink);
+  padding: 12px 14px;
+  border-radius: 14px;
+  outline: none;
+}
+
+.date-editor input:focus {
+  border-color: rgba(217, 75, 24, 0.55);
+}
+
 .mini-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
