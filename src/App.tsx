@@ -2,14 +2,14 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import "./styles.css";
 import {
   CHALLENGE_END,
-  CHALLENGE_START,
-  CHALLENGE_TARGET,
   WEEKLY_TARGET,
-  getChallengePhase,
   getChallengeProgress,
   getChallengeSessions,
   getCurrentStreak,
+  getDatePart,
+  getTargetTotal,
   getTodayKey,
+  getWeeklyTarget,
   getWeeklySessionCount,
 } from "./lib/challenge";
 import { addPlayer, listPlayers, listSessions, setSessionComplete } from "./lib/storage";
@@ -26,13 +26,8 @@ function formatDateLabel(dateKey: string): string {
 }
 
 function getTrendLabel(
-  phase: ReturnType<typeof getChallengePhase>,
   state: ReturnType<typeof getChallengeProgress>["state"],
 ): string {
-  if (phase === "upcoming") {
-    return "Starts Monday";
-  }
-
   if (state === "done") {
     return "Goal hit";
   }
@@ -49,18 +44,13 @@ function getTrendLabel(
 }
 
 function getTrendNote(
-  phase: ReturnType<typeof getChallengePhase>,
   progress: ReturnType<typeof getChallengeProgress>,
 ): string {
-  if (phase === "upcoming") {
-    return `Challenge starts ${formatDateLabel(CHALLENGE_START)}.`;
-  }
-
   if (progress.state === "done") {
     return "Already above the 4-per-week average.";
   }
 
-  return `${progress.sessionsLeft} more sessions to reach ${CHALLENGE_TARGET}.`;
+  return `${progress.sessionsLeft} more sessions to reach the goal.`;
 }
 
 export default function App() {
@@ -77,7 +67,6 @@ export default function App() {
   const [isSaving, setIsSaving] = useState(false);
 
   const todayKey = getTodayKey();
-  const phase = getChallengePhase();
 
   useEffect(() => {
     async function loadData() {
@@ -124,25 +113,30 @@ export default function App() {
   );
 
   const playerStats = useMemo(() => {
-    const challengeSessions = getChallengeSessions(sessions);
-
     return players
       .map((player) => {
+        const signupDateKey = getDatePart(player.created_at);
         const allPlayerSessions = sessions.filter(
           (session) => session.player_id === player.id,
         );
-        const challengePlayerSessions = challengeSessions.filter(
-          (session) => session.player_id === player.id,
+        const challengePlayerSessions = getChallengeSessions(
+          allPlayerSessions,
+          signupDateKey,
         );
         const totalSessions = challengePlayerSessions.length;
         const weeklySessions = getWeeklySessionCount(allPlayerSessions);
-        const progress = getChallengeProgress(totalSessions);
+        const weeklyTarget = getWeeklyTarget(signupDateKey);
+        const progress = getChallengeProgress(totalSessions, signupDateKey);
         const streak = getCurrentStreak(allPlayerSessions);
+        const targetTotal = getTargetTotal(signupDateKey);
 
         return {
           player,
+          signupDateKey,
           totalSessions,
+          targetTotal,
           weeklySessions,
+          weeklyTarget,
           streak,
           completedToday: allPlayerSessions.some(
             (session) => session.practiced_on === todayKey,
@@ -291,7 +285,8 @@ export default function App() {
             leaderboard and win the grand prize.
           </p>
           <p className="hero-subnote">
-            Goal: at least 15 minutes of dribbling each day.
+            Each person starts when they join. Challenge ends{" "}
+            {formatDateLabel(CHALLENGE_END)}.
           </p>
         </div>
       </section>
@@ -385,21 +380,21 @@ export default function App() {
                 <div className="summary-card mini-stat-card">
                   <span className="summary-label">This week</span>
                   <strong>
-                    {selectedStats.weeklySessions}/{WEEKLY_TARGET}
+                    {selectedStats.weeklySessions}/{selectedStats.weeklyTarget}
                   </strong>
                   <span className="summary-footnote">sessions</span>
                 </div>
                 <div className="summary-card mini-stat-card">
                   <span className="summary-label">Trend</span>
-                  <strong>{getTrendLabel(phase, selectedStats.progress.state)}</strong>
+                  <strong>{getTrendLabel(selectedStats.progress.state)}</strong>
                   <span className="summary-footnote">
-                    {getTrendNote(phase, selectedStats.progress)}
+                    {getTrendNote(selectedStats.progress)}
                   </span>
                 </div>
                 <div className="summary-card mini-stat-card">
                   <span className="summary-label">Challenge total</span>
                   <strong>
-                    {selectedStats.totalSessions}/{CHALLENGE_TARGET}
+                    {selectedStats.totalSessions}/{selectedStats.targetTotal}
                   </strong>
                   <span className="summary-footnote">sessions</span>
                 </div>
@@ -454,9 +449,9 @@ export default function App() {
             Do at least 15 minutes of dribbling each day.
           </p>
           <p className="panel-note basic-note">
-            Goal one is averaging 4 sessions per week across the challenge, which
-            means {CHALLENGE_TARGET} total by {formatDateLabel(CHALLENGE_END)}.
-            Goal two is finishing first on the leaderboard.
+            Each person starts when they join. Their goal is 4 sessions per week,
+            with the first week prorated if there are fewer than 4 days left.
+            Everyone still finishes on {formatDateLabel(CHALLENGE_END)}.
           </p>
         </article>
 

@@ -21,12 +21,21 @@ export function getTodayKey(): string {
   return toDateKey(new Date());
 }
 
-export function isWithinChallenge(dateKey: string): boolean {
-  return dateKey >= CHALLENGE_START && dateKey <= CHALLENGE_END;
+export function getDatePart(value: string): string {
+  return value.slice(0, 10);
 }
 
-export function getChallengeSessions(sessions: Session[]): Session[] {
-  return sessions.filter((session) => isWithinChallenge(session.practiced_on));
+export function isWithinChallenge(dateKey: string, startDateKey: string): boolean {
+  return dateKey >= startDateKey && dateKey <= CHALLENGE_END;
+}
+
+export function getChallengeSessions(
+  sessions: Session[],
+  startDateKey: string,
+): Session[] {
+  return sessions.filter((session) =>
+    isWithinChallenge(session.practiced_on, startDateKey),
+  );
 }
 
 export function getCurrentWeekRange(referenceDate = new Date()): {
@@ -95,43 +104,99 @@ export function getWeeklySessionCount(sessions: Session[], referenceDate = new D
   ).length;
 }
 
-export function getChallengeProgress(totalSessions: number, referenceDate = new Date()): {
+function daysBetweenInclusive(startDateKey: string, endDateKey: string): number {
+  const start = fromDateKey(startDateKey);
+  const end = fromDateKey(endDateKey);
+  const diffMs = end.getTime() - start.getTime();
+
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+}
+
+export function getTargetTotal(
+  startDateKey: string,
+  endDateKey = CHALLENGE_END,
+): number {
+  if (startDateKey > endDateKey) {
+    return 0;
+  }
+
+  let cursor = fromDateKey(startDateKey);
+  let total = 0;
+
+  while (toDateKey(cursor) <= endDateKey) {
+    const week = getCurrentWeekRange(cursor);
+    const segmentStart = toDateKey(cursor);
+    const segmentEnd = week.end < endDateKey ? week.end : endDateKey;
+    const daysAvailable = daysBetweenInclusive(segmentStart, segmentEnd);
+
+    total += Math.min(WEEKLY_TARGET, daysAvailable);
+
+    cursor = fromDateKey(segmentEnd);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return total;
+}
+
+export function getWeeklyTarget(
+  startDateKey: string,
+  referenceDate = new Date(),
+): number {
+  const week = getCurrentWeekRange(referenceDate);
+  const segmentStart = startDateKey > week.start ? startDateKey : week.start;
+  const segmentEnd = week.end < CHALLENGE_END ? week.end : CHALLENGE_END;
+
+  if (segmentStart > segmentEnd) {
+    return 0;
+  }
+
+  return Math.min(WEEKLY_TARGET, daysBetweenInclusive(segmentStart, segmentEnd));
+}
+
+export function getChallengeProgress(
+  totalSessions: number,
+  startDateKey: string,
+  referenceDate = new Date(),
+): {
   sessionsLeft: number;
-  weeklyAverageNeeded: number;
+  targetTotal: number;
   state: "ahead" | "on-pace" | "catch-up" | "done";
 } {
-  if (totalSessions >= CHALLENGE_TARGET) {
+  const todayKey = toDateKey(referenceDate);
+  const targetTotal = getTargetTotal(startDateKey);
+  const targetByToday = getTargetTotal(
+    startDateKey,
+    todayKey < CHALLENGE_END ? todayKey : CHALLENGE_END,
+  );
+  const sessionsLeft = Math.max(0, targetTotal - totalSessions);
+
+  if (totalSessions >= targetTotal) {
     return {
-      sessionsLeft: 0,
-      weeklyAverageNeeded: 0,
+      sessionsLeft,
+      targetTotal,
       state: "done",
     };
   }
 
-  const daysRemaining = getDaysRemaining(referenceDate);
-  const weeksRemaining = Math.max(daysRemaining / 7, 1 / 7);
-  const sessionsLeft = CHALLENGE_TARGET - totalSessions;
-  const weeklyAverageNeeded = sessionsLeft / weeksRemaining;
-
-  if (weeklyAverageNeeded < 3.5) {
+  if (totalSessions > targetByToday) {
     return {
       sessionsLeft,
-      weeklyAverageNeeded,
+      targetTotal,
       state: "ahead",
     };
   }
 
-  if (weeklyAverageNeeded <= WEEKLY_TARGET) {
+  if (totalSessions >= targetByToday) {
     return {
       sessionsLeft,
-      weeklyAverageNeeded,
+      targetTotal,
       state: "on-pace",
     };
   }
 
   return {
     sessionsLeft,
-    weeklyAverageNeeded,
+    targetTotal,
     state: "catch-up",
   };
 }
