@@ -287,9 +287,8 @@ export default function App() {
           <div className="eyebrow">4-Week Challenge</div>
           <h1>Pick a person. Check off today. Watch the board.</h1>
           <p className="lead">
-            Starts {formatDateLabel(CHALLENGE_START)} and ends{" "}
-            {formatDateLabel(CHALLENGE_END)}. Hit {WEEKLY_TARGET} sessions per
-            week on average, or finish on top of the leaderboard.
+            Average {WEEKLY_TARGET} sessions a week and win a prize. Top the
+            leaderboard and win the grand prize.
           </p>
         </div>
       </section>
