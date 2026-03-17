@@ -290,6 +290,9 @@ export default function App() {
             Average {WEEKLY_TARGET} sessions a week and win a prize. Top the
             leaderboard and win the grand prize.
           </p>
+          <p className="hero-subnote">
+            Goal: at least 15 minutes of dribbling each day.
+          </p>
         </div>
       </section>
 
@@ -447,6 +450,9 @@ export default function App() {
               <h2>Very simple</h2>
             </div>
           </div>
+          <p className="panel-note basic-note">
+            Do at least 15 minutes of dribbling each day.
+          </p>
           <p className="panel-note basic-note">
             Goal one is averaging 4 sessions per week across the challenge, which
             means {CHALLENGE_TARGET} total by {formatDateLabel(CHALLENGE_END)}.

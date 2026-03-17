@@ -129,6 +129,13 @@ button {
   font-size: 1.03rem;
 }
 
+.hero-subnote {
+  margin: 12px 0 0;
+  color: rgba(19, 32, 51, 0.78);
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
 .hero-stats {
   display: grid;
   gap: 12px;
